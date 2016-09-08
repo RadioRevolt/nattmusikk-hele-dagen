@@ -1,2 +1,114 @@
 # nattmusikk-hele-dagen
 Aktiver og deaktiver nattmusikk-hele-døgnet fra Slack
+
+## Bruk
+
+### Oppsett
+
+1. `virtualenv -p python3 venv`
+2. `. venv/bin/activate`
+3. `pip install -r requirements.txt`
+4. `sudo adduser --system --no-create-home --group --disabled-login nattmusikk-hele-dagen`
+5. `sudo -u nattmusikk-hele-dagen make prepare`
+6. Resten av stegene er ikke implementert enda (antar SystemD brukes):
+
+   `sudo cp nattmusikk-hele-dagen.service /etc/systemd/system/`
+7. Rediger `/etc/systemd/system/nattmusikk-hele-dagen.service` og fyll inn
+   manglende detaljer.
+8. `sudo systemctl enable nattmusikk-hele-dagen`
+9. Endre LiquidSoap-skriptet så det bruker en interactive bool med navnet du
+   brukte i steg 7. Du må også sette opp bruk av en socket-fil. Se
+   `liquidsoap_example.liq`
+9. `sudo systemctl start nattmusikk-hele-dagen`
+10. Kopier nøkkel-fila (du må være superbruker for å lese den) og putt den
+    samme fila på maskinen med SlackBot.
+11. Integrer `slack2request.py` med rammeverket ditt.
+
+### Slack-bruk
+
+Skriv `.nattmusikk` for nåværende status og hjelpsom tilbakemelding.
+Bruk eventuelt `.nattmusikk status` hvis du ikke er interessert i
+hjelp-informasjonen.
+
+Skriv `.nattmusikk på` for å slå på nattmusikk-hele-døgnet.
+Skriv `.nattmusikk av` for å slå av nattmusikk-hele-døgnet.
+
+Merk at Anna må være oppe for at dette skal fungere.
+
+Hvis du glemmer å slå av nattmusikk-hele-døgnet, skal det bli postet en
+påminnelse på Slack klokken 9 om morningen og 17 på kvelden.
+
+## Bakgrunn
+
+Mellom 0 og 7 går det nattmusikk på Radio Revolt. Denne nattmusikken er en egen
+stream i LiquidSoap, som består av låter fra en spesifikk mappe (med noen
+jingler kastet inn). Samtidig så kan du ha en sending fra studio ved å ganske
+enkelt sette et av studioene på lufta og starte sendinga. Du trenger ikke gjøre
+noenting for å skru av nattmusikken.
+
+Nattmusikken er implementert ved at den spilles når det er "stille på lufta"
+mellom 0 og 7. Det vil si at hvis det er stille fra alle studioene i 12
+sammenhengende sekunder, så vil en fallback kicke inn. 0-7 er dette nattmusikk,
+7-24 er dette "tekniske problemer"-jingelen og vi varsles om problemene. Er det
+stille fra nattmusikken i 12 sammenhengende sekunder, vil også "tekniske
+problemer"-jingelen brukes og vi vil varsles.
+
+"Tekniske problemer"-jingelen er en evig loop av Patrik Alm sin "tekniske
+problemer"-låt. Den går i ett minutt før den looper. Hver gang den looper,
+kjøres et Python-skript som sender oss beskjed på Slack om at det er "Stille på
+streamn(sic)".
+
+Problemet dette prosjektet ønsker å løse, er at vi ofte vil bli spammet ned av
+Anna når det er langvarig stille-på-lufta, for eksempel når det har vært
+strømbrudd og vi ikke har fått opp pappagorg, men streamer er oppe. Vi har da
+ikke tilgang til radioarkivet der alle reprisene ligger, men streamer kjefter
+likevel på oss om at det er stille på lufta. Dette blir plagsomt i lengden, så
+derfor pleier vi å gå inn i LiquidSoap-konfigurasjonen og sette på det jeg liker
+å kalle **"Nattmusikk hele døgnet"**. Det vil si at vi setter nattmusikken til
+å kjøre 0-24, slik at lytterne har noe å høre på og vi slipper å bli varslet
+hvert minutt.
+
+Det er ganske slitsomt å måtte logge seg inn på streamer hver gang vi trenger å
+gjøre dette (spesielt siden det er under spesielt stressende omstendigheter
+behovet melder seg), så derfor ønsker jeg å **gjøre det enkelt** å aktivere
+nattmusikk-hele-døgnet når vi vet at det blir langvarig stillhet, og deaktivere
+når vi er tilbake i vanlig drift. For at vi ikke skal glemme å slå det av, skal
+vi også varsles når det har vært på i lengre tid.
+
+## Design
+
+I LiquidSoap lager vi oss en interaktiv bool - det vil si en variabel som kan
+endre verdi når som helst, og som kan endre hvilken stream som brukes også.
+Vi setter også opp slik at eksterne program kan kommunisere med
+LiquidSoap-serveren.
+
+Et Python-program vil lytte etter HTTP-requests, og autentisere disse.
+Avhengig av hva avsenderen ønsket, vil programmet kommunisere med
+LiquidSoap-serveren og endre verdien til den nevnte variabelen eller hente dens
+nåværende verdi.
+
+På en annen maskin vil en annen Python-modul kommunisere med Python-programmet
+fra forrige avsnitt, og fungere som et lag mellom den og Slack.
+
+## Protokoll
+
+Ukryptert HTTP brukes. For å autentisere klient for server og server for klient,
+brukes fire One-Time Passwords (OTP). Dette betyr at de hemmelige nøklene er lagret både
+hos klient og server, og at begge må være synkronisert i tid.
+
+Kall slack2request Alice, og request2liquidsoap Bob. Alice sender en GET
+request til Bob, og gir et tall som path. Dette tallet er summen av to tall.
+
+Hvis Alice vil aktivere den boolske variabelen, sender hun en request som er
+den første og andre OTP-en summert sammen. Hvis Alice vil deaktivere den,
+sender hun request som er den første subtrahert den andre OTPen. Hvis Alice
+ønsker å vite nåværende status, sender hun den første OTP-en for seg selv.
+
+Bob vil gjøre det han ble bedt om, og deretter returnere med et tall som
+representerer ny status. Den fungerer akkurat likt som for Alice, bortsett fra
+at OTP nummer 3 bruker i stedet for 1, og 4 i stedet for 2.
+
+Ved summering og subtrahering vil verdier utenfor 100000-999999 bli gjort om så
+de passer innenfor området (ved å "dukke opp" på andre sida av skalaen).
+
+401 brukes hvis OTP-en mislyktes eller en annen påloggingsfeil oppstod.
