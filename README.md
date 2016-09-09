@@ -18,7 +18,7 @@ Ops: ikke alle stegene her er implementert enda.
    * `mv keyfile{_copy,}.txt`
    * `chmod 400 keyfile.txt`
    * `sudo chown navn-på-slackbot-bruker:navn-på-slackbot-gruppe keyfile.txt`
-5. Slett `keyfile_copy` fra serveren med LiquidSoap.
+5. Slett `keyfile_copy.txt` fra serveren med LiquidSoap.
 6. Kjør `sudo systemctl start nattmusikk-hele-dagen` (SystemD)
 7. Restart SlackBot
 
