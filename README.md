@@ -108,7 +108,4 @@ Bob vil gjøre det han ble bedt om, og deretter returnere med et tall som
 representerer ny status. Den fungerer akkurat likt som for Alice, bortsett fra
 at OTP nummer 3 bruker i stedet for 1, og 4 i stedet for 2.
 
-Ved summering og subtrahering vil verdier utenfor 100000-999999 bli gjort om så
-de passer innenfor området (ved å "dukke opp" på andre sida av skalaen).
-
 401 brukes hvis OTP-en mislyktes eller en annen påloggingsfeil oppstod.

@@ -1,0 +1,10 @@
+{% extends "settings_base.template.yaml" %}
+{% block explanation %}
+# Settings for nightmusic-all-day, used on the host which provides the layer
+# between Slack and the host running LiquidSoap.
+{% endblock %}
+
+{% block more_settings %}
+# The port on which nightmusic-all-day on the host running LS is listening
+port: {{ port }}
+{% endblock %}

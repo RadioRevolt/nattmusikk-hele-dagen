@@ -3,34 +3,25 @@
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import socket
-import argparse
 from time import sleep
 import pyotp
+import flask
+import yaml
+import os.path
 
 
-def run(port=8000, server_class=HTTPServer, handler_class=BaseHTTPRequestHandler):
-    server_address = ('', port)
-    httpd = server_class(server_address, server_class)
-    httpd.serve_forever()
+app = flask.Flask(__name__)
 
 
-def parse_command_line():
-    parser = argparse.ArgumentParser(
-        description="Activate, deactivate or query"
-        " the status of nightmusic-all-day in response to HTTP requests.")
-    parser.add_argument(
-        'port', type=int, default=8000,
-        help="Port to run the HTTP server on.")
-    parser.add_argument(
-        'keyfile', type=argparse.FileType("r", encoding="UTF-8"),
-        help="Path to UTF-8 file with the 4 secret base32 keys, separated by "
-             "newline (its content must be the same on both server and client).")
-    parser.add_argument(
-        'socketfile', type=str,
-        help="Path to the socket file opened by LiquidSoap.")
+def parse_config():
+    with open(os.path.join(os.path.dirname(__file__), 'settings.yaml')) as f:
+        doc = yaml.load(f)
+    keyfile = doc["keyfile"]
+    socketfile = doc["socketfile"]
+    port = doc["port"]
+    allowed_hosts = doc["allowed_hosts"]
 
-    parsed = parser.parse_args()
-    return parser, parsed.port, parsed.keyfile, parsed.socketfile
+    return keyfile, socketfile, port, allowed_hosts
 
 
 class LiquidSoapBoolean:

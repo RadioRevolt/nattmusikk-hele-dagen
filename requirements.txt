@@ -1,1 +1,4 @@
 pyotp
+flask
+gunicorn
+PyYAML

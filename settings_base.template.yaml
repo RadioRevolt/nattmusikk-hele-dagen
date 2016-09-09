@@ -1,0 +1,7 @@
+{% block explanation %}{% endblock %}
+
+# Path to a UTF-8-encoded file which contains the 4 secret base32 keys
+# separated by newlines (its content must be the same on both server and client)
+keyfile: "{{ keyfile }}"
+
+{% block more_settings %}{% endblock %}

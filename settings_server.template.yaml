@@ -1,0 +1,19 @@
+{% extends "settings_base.template.yaml" %}
+{% block explanation %}
+# Settings for nightmusic-all-day, used on the host which runs LiquidSoap
+{% endblock %}
+
+{% block more_settings %}
+# Path to the socket file opened by LiquidSoap. Used to communicate with the
+# LiquidSoap server.
+socketfile: "{{ socketfile }}"
+
+# Which port to use for listening for HTTP requests.
+port: {{ port }}
+
+# Whitelist of hosts which may communicate with this software.
+allowed_hosts:
+{% for host in allowed_hosts +%}  - "{{ host }}"
+{% endfor %}
+
+{% endblock %}
