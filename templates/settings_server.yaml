@@ -1,5 +1,5 @@
-{% extends "settings_base.template.yaml" %}
-{% block explanation %}
+{% extends "settings_base.yaml" %}
+{% block explanation -%}
 # Settings for nightmusic-all-day, used on the host which runs LiquidSoap
 {% endblock %}
 
@@ -10,14 +10,14 @@ socketfile: "{{ socketfile }}"
 
 # The name of the interactive.bool in LiquidSoap that this program is supposed
 # to change.
-liquidsoap_var_name: "{{ ls_var_name }}"
+liquidsoap_var_name: "{{ liquidsoap_var_name }}"
 
 # Which port to use for listening for HTTP requests.
 port: {{ port }}
 
 # Whitelist of other computers which may communicate with this software.
 allowed_remote_addresses:
-{% for host in allowed_hosts +%}  - "{{ host }}"
+{% for address in allowed_remote_addresses %}  - "{{ address }}"
 {% endfor %}
 
 {% endblock %}

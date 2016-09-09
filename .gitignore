@@ -90,3 +90,7 @@ ENV/
 
 # Ignore project files
 .idea/
+
+# Application specific:
+/settings.yaml
+/settings_slackbot.yaml
