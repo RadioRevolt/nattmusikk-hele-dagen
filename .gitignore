@@ -94,3 +94,4 @@ ENV/
 # Application specific:
 /settings.yaml
 /settings_slackbot.yaml
+/keyfile.txt
