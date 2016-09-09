@@ -11,8 +11,8 @@ socketfile: "{{ socketfile }}"
 # Which port to use for listening for HTTP requests.
 port: {{ port }}
 
-# Whitelist of hosts which may communicate with this software.
-allowed_hosts:
+# Whitelist of other computers which may communicate with this software.
+allowed_remote_addresses:
 {% for host in allowed_hosts +%}  - "{{ host }}"
 {% endfor %}
 
