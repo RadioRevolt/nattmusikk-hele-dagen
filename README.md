@@ -5,11 +5,30 @@ Aktiver og deaktiver nattmusikk-hele-døgnet fra Slack
 
 ### Oppsett
 
+Ops: ikke alle stegene her er implementert enda.
+
+1. Sett opp LiquidSoap-skriptet så du kan kommunisere med det via en socket-fil
+   (se example.liq).
+2. Sett opp så du bruker en interactive.bool-variabel som skal være logisk høy
+   når nattmusikk-hele-døgnet er aktivert.
+3. Kjør `make setup`, og følg promptene.
+4. Kopier `keyfile_copy.txt`, `settings_slackbot.yaml` og `slack2request.py` over til
+   din SlackBot instans.
+5. Når du er på serveren med SlackBot-instansen:
+   * `mv keyfile{_copy,}.txt`
+   * `chmod 400 keyfile.txt`
+   * `sudo chown navn-på-slackbot-bruker:navn-på-slackbot-gruppe keyfile.txt`
+5. Slett `keyfile_copy` fra serveren med LiquidSoap.
+6. Kjør `sudo systemctl start nattmusikk-hele-dagen` (SystemD)
+7. Restart SlackBot
+
+Alternativt oppsett (ikke holdt oppdatert, vil fjernes en gang):
+
 1. `virtualenv -p python3 venv`
 2. `. venv/bin/activate`
 3. `pip install -r requirements.txt`
 4. `sudo adduser --system --no-create-home --group --disabled-login nattmusikk-hele-dagen`
-5. `sudo -u nattmusikk-hele-dagen make prepare`
+5. ``
 6. Resten av stegene er ikke implementert enda (antar SystemD brukes):
 
    `sudo cp nattmusikk-hele-dagen.service /etc/systemd/system/`

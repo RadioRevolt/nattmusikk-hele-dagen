@@ -8,6 +8,7 @@ settings.yaml: venv
 keyfile.txt: venv
 	venv/bin/python generate_keyfile.py keyfile.txt
 	chmod 400 keyfile.txt
+	cp keyfile.txt keyfile_copy.txt
 
 venv:
 	virtualenv -p python3 venv
@@ -17,7 +18,7 @@ venv:
 setup: venv keyfile.txt
 	venv/bin/python generate_settings_file.py both
 	@echo "sudo is potentially needed to create a new user on this system."
-	id -u nattmusikk-hele-dagen &>/dev/null || sudo adduser --system --no-create-home --group --disabled-login nattmusikk-hele-dagen
+	id -u nattmusikk-hele-dagen > /dev/null 2>&1 || sudo adduser --system --no-create-home --group --disabled-login nattmusikk-hele-dagen
 	sudo chown nattmusikk-hele-dagen:nattmusikk-hele-dagen keyfile.txt
 
 .PHONY: wipe

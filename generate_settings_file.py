@@ -36,13 +36,16 @@ else:
 
 # HOST
 if choice in ("both", "slackbot"):
-    choices['host'] = input("Which host will the server run on? ")
+    print("Which host will the server run on?")
+    choices['host'] = input("> ")
 
 # PORT
 if choice == "both":
-    choices['port'] = int(input("At which port? [8000] ") or 8000)
+    print("At which port? [8000]")
+    choices['port'] = int(input("> ") or 8000)
 elif choice == "server":
-    choices['port'] = int(input("Which port should the server run on? [8000] ") or 8000)
+    print("Which port should the server run on? [8000]")
+    choices['port'] = int(input("> ") or 8000)
 else:
     if os.path.isfile(server_configfile):
         # We can use the server's configuration
@@ -51,22 +54,27 @@ else:
             doc = yaml.load(f)
         choices['port'] = doc["port"]
     else:
-        choices['port'] = int(input("Which port is/will the server running/run on? [8000] ") or 8000)
+        print("Which port will the server run on? [8000]")
+        choices['port'] = int(input("> ") or 8000)
 
 # KEYFILE
 if choice in ("both", "server"):
-    keyfile_server = input("Path on the server to the file with the 4 keys: [keys.txt] ") or "keys.txt"
+    print("Path on the server to the file with the 4 keys: [keyfile.txt]")
+    keyfile_server = input("> ") or "keyfile.txt"
 
 if choice in ("both", "slackbot"):
-    keyfile_slackbot = input("Path on the Slackbot host to the file with the 4 keys: [keys.txt] ") or "keys.txt"
+    print("Path on the Slackbot host to the file with the 4 keys: [keyfile.txt]")
+    keyfile_slackbot = input("> ") or "keyfile.txt"
 
 # Server specific
 if choice in ("both", "server"):
     # SOCKETFILE
-    choices['socketfile'] = input("Path to the socket you've configured LiquidSoap to open: ")
+    print("Path to the socket you've configured LiquidSoap to open:")
+    choices['socketfile'] = input("> ")
 
     # LIQUIDSOAP_VAR_NAME
-    choices['liquidsoap_var_name'] = input("Name of the interactive.bool variable in LiquidSoap: ")
+    print("Name of the interactive.bool variable in LiquidSoap:")
+    choices['liquidsoap_var_name'] = input("> ")
 
     # ALLOWED_REMOTE_ADDRESSES
     print("Which computers shall be able to connect to the server?")
