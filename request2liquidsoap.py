@@ -1,7 +1,6 @@
 # This script runs an HTTP server which allows another host to ask us whether
 # nightmusic-all-day-round is activated or not, and activate or deactivate it.
 
-from http.server import HTTPServer, BaseHTTPRequestHandler
 import socket
 from time import sleep
 import pyotp
@@ -22,8 +21,9 @@ def parse_config(configfile):
     socketfile = doc["socketfile"]
     port = doc["port"]
     allowed_remote_addresses = doc["allowed_remote_addresses"]
+    ls_var_name = doc["liquidsoap_var_name"]
 
-    return keyfile, socketfile, port, allowed_remote_addresses
+    return keyfile, socketfile, port, allowed_remote_addresses, ls_var_name
 
 
 def init_otps(keyfile):
@@ -34,40 +34,59 @@ def init_otps(keyfile):
 
 
 class LiquidSoapBoolean:
-    ls_var_name = "nightmusic_activated"
-    def __init__(self, socketfilepath):
+    def __init__(self, socketfilepath, ls_var_name):
         self.socketfilepath = socketfilepath
-        self.socket = self.create_socket(socketfilepath)
+        self.ls_var_name = ls_var_name
+        self.__value = None
+        self.socket = None
 
     @staticmethod
-    def create_socket(socketfilepath):
+    def _create_socket(socketfilepath):
         new_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
         new_socket.connect(socketfilepath)
         return new_socket
 
-    def send_to_socket(self, data):
+    def _send_to_socket(self, data):
+        if not self.socket:
+            raise RuntimeError("Cannot interact with LiquidSoap before socket "
+                               "is opened.")
         self.socket.sendall(data.encode("UTF-8"))
         return self.socket.recv(4096).decode("UTF-8")
 
     @property
     def value(self):
-        r = self.send_to_socket("var.get %s\n" % self.ls_var_name)
+        if self.__value is None:
+            self.force_update()
+        return self.__value
+
+    def _fetch_value(self):
+        r = self._send_to_socket("var.get %s\n" % self.ls_var_name)
         returned_value = r.strip()
         return True if returned_value == "true" else False
 
+    def force_update(self):
+        self.__value = self._fetch_value()
+
     @value.setter
     def value(self, new_value):
-        new_value_str = "true" if new_value else "false"
-        r = self.send_to_socket("var.set %s = %s\n" %
-                                (self.ls_var_name, new_value_str))
+        if new_value != self.value:
+            # This is a change
+            new_value_str = "true" if new_value else "false"
+            r = self._send_to_socket("var.set %s = %s\n" %
+                                     (self.ls_var_name, new_value_str))
+            self.__value = new_value
+
+    def open(self):
+        self.socket = self._create_socket(self.socketfilepath)
 
     def close(self):
         self.socket.close()
+        self.socket = None
 
     def __enter__(self):
-        return self
+        self.open()
 
-    def __exit__(self, *args):
+    def __exit__(self, *_):
         self.close()
 
 
@@ -80,10 +99,12 @@ app = flask.Flask('request2liquidsoap')
 # Where to find the settings
 CONFIGFILE = os.path.join(os.path.dirname(__file__), 'settings.yaml')
 # Parse settings
-KEYFILE, SOCKETFILE, PORT, ALLOWED_REMOTE_ADDRESSES = \
+KEYFILE, SOCKETFILE, PORT, ALLOWED_REMOTE_ADDRESSES, LS_VAR_NAME = \
     parse_config(CONFIGFILE)
 # Init the one time password objects
 OTPS = init_otps(KEYFILE)
+
+interactive_bool = LiquidSoapBoolean(SOCKETFILE, LS_VAR_NAME)
 
 
 ################################################################################
@@ -110,19 +131,17 @@ def handle(user_key):
     sleep(1)  # Weak protection against side-chaining and brute-force
 
     if not (do_status or do_activate or do_deactivate):
-        # TODO: Send error
+        flask.abort(401)
         pass
     else:
         if do_status:
-            # TODO: Fetch value
+            # We'll return the current value anyway
             pass
         elif do_activate:
-            # TODO: Set interactive boolean to True
-            pass
+            interactive_bool.value = True
         elif do_deactivate:
-            # TODO: Set interactive boolean to False
-            pass
-        # TODO: Send response with status==200 and confirmation codes
+            interactive_bool.value = False
+        return str(OTPS[2].now() + (OTPS[3].now() * (1 if interactive_bool.value else -1)))
 
 
 class StandaloneApplication(gunicorn.app.base.BaseApplication):
@@ -149,4 +168,5 @@ def main():
     StandaloneApplication(app, options).run()
 
 if __name__ == '__main__':
-    main()
+    with interactive_bool:
+        main()

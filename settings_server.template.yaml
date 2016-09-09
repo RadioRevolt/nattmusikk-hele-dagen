@@ -8,6 +8,10 @@
 # LiquidSoap server.
 socketfile: "{{ socketfile }}"
 
+# The name of the interactive.bool in LiquidSoap that this program is supposed
+# to change.
+liquidsoap_var_name: "{{ ls_var_name }}"
+
 # Which port to use for listening for HTTP requests.
 port: {{ port }}
 
