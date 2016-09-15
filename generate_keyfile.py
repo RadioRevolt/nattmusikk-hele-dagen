@@ -4,8 +4,9 @@ import base64
 import os
 
 parser = argparse.ArgumentParser(
-    description="Generate keyfile.txt, which contains two One Time "
-                "Password-keys (one for each direction of communication), and "
+    description="Generate keyfile.txt, which contains three One Time "
+                "Password-keys (one for each direction of communication, one "
+                "for unsuccessful authentication attempts), and "
                 "one shared 'password' for authenticating the slack2request "
                 "program."
 )
@@ -23,6 +24,7 @@ args = parser.parse_args()
 keyfile = args.keyfile
 
 keyfile.writelines(
-    [pyotp.random_base32(), pyotp.random_base32(),
-     base64.b64encode(os.urandom(64))])
+    ["%s\n" % line for line in [pyotp.random_base32(), pyotp.random_base32(),
+                                pyotp.random_base32(),
+     base64.b64encode(os.urandom(63)).decode("ASCII")]])
 keyfile.close()
