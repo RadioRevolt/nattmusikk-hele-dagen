@@ -12,6 +12,21 @@ socketfile: "{{ socketfile }}"
 # to change.
 liquidsoap_var_name: "{{ liquidsoap_var_name }}"
 
+# Slack-specific settings:
+slack:
+  # API Token
+  token: "{{ token }}"
+
+  # Which channel to post in
+  channel: "{{ channel }}"
+
+  # Username to post as
+  username: "{{ username }}"
+
+  # Avatar, given as an emoji
+  icon_emoji: "{{ icon_emoji }}"
+
+
 # Which port to use for listening for HTTP requests.
 port: {{ port }}
 

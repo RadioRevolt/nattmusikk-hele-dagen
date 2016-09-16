@@ -88,6 +88,19 @@ if choice in ("both", "server"):
             break
         choices['allowed_remote_addresses'].append(this_input)
 
+    # SLACK
+    print("Slack API Token?")
+    choices['token'] = input("> ")
+
+    print("Slack channel to post in? [#drift]")
+    choices['channel'] = input("> ") or "#drift"
+
+    print("Username to use when posting to Slack? [anna]")
+    choices['username'] = input("> ") or "anna"
+
+    print("Avatar to use on Slack, formulated as a Slack emoji? [:radio:]")
+    choices['icon_emoji'] = input("> ") or ":radio:"
+
 print("Generating the file(s)...")
 
 # Generate the files!

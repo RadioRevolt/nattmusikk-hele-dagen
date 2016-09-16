@@ -10,6 +10,7 @@ import os.path
 import gunicorn.app.base
 import hmac
 import random
+import requests
 
 ################################################################################
 # Define utilities
@@ -24,8 +25,10 @@ def parse_config(configfile):
     port = doc["port"]
     allowed_remote_addresses = doc["allowed_remote_addresses"]
     ls_var_name = doc["liquidsoap_var_name"]
+    slack_options = doc["slack"]
 
-    return keyfile, socketfile, port, allowed_remote_addresses, ls_var_name
+    return keyfile, socketfile, port, allowed_remote_addresses, ls_var_name, \
+        slack_options
 
 
 def parse_keyfile(keyfile):
@@ -33,6 +36,15 @@ def parse_keyfile(keyfile):
         lines = f.readlines()
     keys = [line.strip() for line in lines if line.strip()]
     return [pyotp.TOTP(key) for key in keys[:3]], keys[3]
+
+
+def send_to_slack(message):
+    options = SLACK_OPTIONS
+    options['text'] = message
+    r = requests.get("https://slack.com/api/chat.postMessage", params=options,
+                     timeout=10.0)
+    r.raise_for_status()
+    r.close()
 
 
 class LiquidSoapBoolean:
@@ -107,8 +119,8 @@ app = flask.Flask('request2liquidsoap')
 # Where to find the settings
 CONFIGFILE = os.path.join(os.path.dirname(__file__), 'settings.yaml')
 # Parse settings
-KEYFILE, SOCKETFILE, PORT, ALLOWED_REMOTE_ADDRESSES, LS_VAR_NAME = \
-    parse_config(CONFIGFILE)
+KEYFILE, SOCKETFILE, PORT, ALLOWED_REMOTE_ADDRESSES, LS_VAR_NAME, \
+    SLACK_OPTIONS = parse_config(CONFIGFILE)
 # Init the one time password objects
 OTPS, PASSWORD = parse_keyfile(KEYFILE)
 
@@ -146,8 +158,14 @@ def handle():
     with interactive_bool:
         if action == "on" and is_authenticated:
             interactive_bool.value = True
+            send_to_slack("Nattmusikk-hele-døgnet er skrudd *PÅ*. \nDere vil *_ikke_*"
+                          " lenger få advarsel når det er stille på lufta "
+                          "(annet enn når nattmusikken er stille).\n"
+                          "Skriv `.nattmusikk av` når det er vanlig drift igjen.")
         if action == "off" and is_authenticated:
             interactive_bool.value = False
+            send_to_slack("Nattmusikk-hele-døgnet er skrudd *AV*.\n"
+                          "Normal drift gjenopptatt.")
         if action == "status" and is_authenticated:
             pass
         current_value = interactive_bool.value

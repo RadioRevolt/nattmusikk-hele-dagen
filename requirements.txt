@@ -2,3 +2,4 @@ pyotp
 flask
 gunicorn
 PyYAML
+requests
