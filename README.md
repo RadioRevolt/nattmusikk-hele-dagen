@@ -45,9 +45,8 @@ Alternativt oppsett (ikke holdt oppdatert, vil fjernes en gang):
 
 ### Slack-bruk
 
-Skriv `.nattmusikk` for nåværende status og hjelpsom tilbakemelding.
-Bruk eventuelt `.nattmusikk status` hvis du ikke er interessert i
-hjelp-informasjonen.
+Skriv `.nattmusikk` for hjelp.
+Bruk `.nattmusikk status` hvis du ønsker å vite nåværende status.
 
 Skriv `.nattmusikk på` for å slå på nattmusikk-hele-døgnet.
 Skriv `.nattmusikk av` for å slå av nattmusikk-hele-døgnet.
@@ -89,7 +88,7 @@ hvert minutt.
 
 Det er ganske slitsomt å måtte logge seg inn på streamer hver gang vi trenger å
 gjøre dette (spesielt siden det er under spesielt stressende omstendigheter
-behovet melder seg), så derfor ønsker jeg å **gjøre det enkelt** å aktivere
+behovet melder seg). Derfor ønsker jeg å **gjøre det enkelt** å aktivere
 nattmusikk-hele-døgnet når vi vet at det blir langvarig stillhet, og deaktivere
 når vi er tilbake i vanlig drift. For at vi ikke skal glemme å slå det av, skal
 vi også varsles når det har vært på i lengre tid.
@@ -102,8 +101,8 @@ Vi setter også opp slik at eksterne program kan kommunisere med
 LiquidSoap-serveren.
 
 Et Python-program vil lytte etter HTTP-requests, og autentisere disse.
-Avhengig av hva avsenderen ønsket, vil programmet kommunisere med
-LiquidSoap-serveren og endre verdien til den nevnte variabelen eller hente dens
+Avhengig av hva avsenderen ønsker, vil programmet kommunisere med
+LiquidSoap-serveren og endre verdien til den nevnte variabelen og hente dens
 nåværende verdi.
 
 På en annen maskin vil en annen Python-modul kommunisere med Python-programmet
@@ -111,20 +110,30 @@ fra forrige avsnitt, og fungere som et lag mellom den og Slack.
 
 ## Protokoll
 
-Ukryptert HTTP brukes. For å autentisere klient for server og server for klient,
-brukes fire One-Time Passwords (OTP). Dette betyr at de hemmelige nøklene er lagret både
-hos klient og server, og at begge må være synkronisert i tid.
+I utgangspunktet bør kryptert HTTP brukes (HTTPS), men det er ikke alltid like
+lett å få til. Et passord og et engangspassord brukes for å autentisere
+klienten, Dette betyr at de hemmelige nøklene er lagret både hos klient og
+server, og at begge må være synkronisert i tid.
 
-Kall slack2request Alice, og request2liquidsoap Bob. Alice sender en GET
-request til Bob, og gir et tall som path. Dette tallet er summen av to tall.
+Hvis en angriper får tilgang til én av maskinene, vil han eller hun kunne skru
+nattmusikk-hele-døgnet av eller på. Derfor er programvaren laget slik at det
+postes på Slack hver gang nattmusikk-hele-døgnet skrus av eller på. Dette gjøres
+på server-sida, for å sikre at ikke en angriper på egen maskin kan gå forbi
+rapporteringen.
 
-Hvis Alice vil aktivere den boolske variabelen, sender hun en request som er
-den første og andre OTP-en summert sammen. Hvis Alice vil deaktivere den,
-sender hun request som er den første subtrahert den andre OTPen. Hvis Alice
-ønsker å vite nåværende status, sender hun den første OTP-en for seg selv.
+For å endre og hente status på nattmusikk-hele-døgnet, sender du en
+POST-request til root der request2liquidsoap.py kjører. Den skal inneholde tre
+POST-felter:
 
-Bob vil gjøre det han ble bedt om, og deretter returnere med et tall som
-representerer ny status. Den fungerer akkurat likt som for Alice, bortsett fra
-at OTP nummer 3 bruker i stedet for 1, og 4 i stedet for 2.
+* **`password`**: Passordet, som er lagret i keyfile.txt.
+* **`onetime_password`**: Éngangspassordet, generert med nøkkelen i keyfile.txt.
+* **`action`**: Én av status, on eller off, avhengig av hva du ønsker å gjøre.
 
-401 brukes hvis OTP-en mislyktes eller en annen påloggingsfeil oppstod.
+Uansett hvilken `action` du velger, så vil responsen være JSON med følgende
+felter:
+* **`onetime_password`**: Et éngangspassord, generert med den andre nøkkelen
+    i keyfile.txt. Brukes for å forsikre seg om at serveren godkjente
+    innloggingen.
+* **`status`**: `true` hvis nattmusikk-hele-døgnet er aktivert, `false` hvis
+    ikke.
+
