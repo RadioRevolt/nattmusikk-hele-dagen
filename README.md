@@ -17,6 +17,12 @@ Ops: ikke alle stegene her er implementert enda.
 2. Sett opp så du bruker en interactive.bool-variabel som skal være logisk høy
    når nattmusikk-hele-døgnet er aktivert.
 3. Kjør `make setup`, og følg promptene.
+4. Installer [Let's Encrypt](https://letsencrypt.org/), eller rettere sagt
+    Certbot (finnes i pakkerepoet for nyere Linux-distribusjoner), og gå
+    gjennom prosessen med å få sertifikat for serveren din (bruk certonly
+    og manual). nattmusikk-hele-dagen vil se at Let's Encrypt har laget
+    sertifikater, og bruke dem automatisk (gitt at de ligger i
+    `/etc/letsencrypt/live/$host` der $host er hosten du oppga i steg 3).
 4. Kopier `keyfile_copy.txt` og `settings_slackbot.yaml`over til din SlackBot
     instans.
 5. Når du er på serveren med SlackBot-instansen:
@@ -26,6 +32,24 @@ Ops: ikke alle stegene her er implementert enda.
 5. Slett `keyfile_copy.txt` fra serveren med LiquidSoap.
 6. Kjør `sudo systemctl start nattmusikk-hele-dagen` (SystemD)
 7. Restart RadioRevolt/SlackBot
+8. Legg til et par linjer i crontab:
+
+   `sudo -u nattmusikk-hele-dagen crontab -e`
+
+   Linjene:  
+   ```
+   0 9,17 * * * * /sti/til/nattmusikk-hele-dagen/venv/bin/python /sti/til/nattmusikk-hele-dagen/warn_if_on.py
+   ```
+
+   Og også for sudo:
+
+   `sudo crontab -e`
+
+   Med linjen:
+   ```
+   23 1 * * * * certbot renew -n
+   ```
+
 
 
 Alternativt oppsett (ikke holdt oppdatert, vil fjernes en gang):
