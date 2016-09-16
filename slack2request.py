@@ -1,5 +1,6 @@
 import requests
 import pyotp
+import warnings
 import yaml
 
 
@@ -9,8 +10,13 @@ def parse_config(configfile):
     keyfile = doc['keyfile']
     port = doc['port']
     host = doc['host']
+    https = doc['https']
 
-    return keyfile, port, host
+    if not https:
+        warnings.warn("Not connecting to the server securely. This is only "
+                      "acceptable during development!")
+
+    return keyfile, port, host, https
 
 
 def parse_keyfile(keyfile):
@@ -20,7 +26,7 @@ def parse_keyfile(keyfile):
     return [pyotp.TOTP(key) for key in keys[:3]], keys[3]
 
 
-KEYFILE, PORT, HOST = parse_config("settings_slackbot.yaml")
+KEYFILE, PORT, HOST, USE_HTTPS = parse_config("settings_slackbot.yaml")
 OTPS, PASSWORD = parse_keyfile(KEYFILE)
 
 
@@ -29,7 +35,7 @@ def set_nightmusic(enabled):
 
 
 def send_to_server(action):
-    r = requests.post("http://%s:%s" % (HOST, PORT),
+    r = requests.post("http%s://%s:%s" % ("s" if USE_HTTPS else "", HOST, PORT),
                       data={"password": PASSWORD,
                             "onetime_password": OTPS[0].now(),
                             "action": action})

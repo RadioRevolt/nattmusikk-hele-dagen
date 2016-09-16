@@ -8,6 +8,8 @@
 # The port on which nightmusic-all-day on the host running LS is listening.
 port: {{ port }}
 
-# The host at which nightmusic-all-day is running
-host: "{{ host }}"
+# Whether the server running LS is using HTTPS or not. Set to false only when
+# developing!
+https: true
+
 {% endblock %}

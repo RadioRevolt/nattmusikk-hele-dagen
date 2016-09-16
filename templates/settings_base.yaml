@@ -4,4 +4,7 @@
 # separated by newlines (its content must be the same on both server and client)
 keyfile: "{{ keyfile }}"
 
+# The host at which nightmusic-all-day can be accessed (don't include https://)
+host: "{{ host }}"
+
 {% block more_settings %}{% endblock %}

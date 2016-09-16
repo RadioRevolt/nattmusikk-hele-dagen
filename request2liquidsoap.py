@@ -5,6 +5,7 @@ import socket
 from time import sleep
 import pyotp
 import flask
+import warnings
 import yaml
 import os.path
 import gunicorn.app.base
@@ -26,9 +27,10 @@ def parse_config(configfile):
     allowed_remote_addresses = doc["allowed_remote_addresses"]
     ls_var_name = doc["liquidsoap_var_name"]
     slack_options = doc["slack"]
+    host = doc["host"]
 
     return keyfile, socketfile, port, allowed_remote_addresses, ls_var_name, \
-        slack_options
+        slack_options, host
 
 
 def parse_keyfile(keyfile):
@@ -120,7 +122,7 @@ app = flask.Flask('request2liquidsoap')
 CONFIGFILE = os.path.join(os.path.dirname(__file__), 'settings.yaml')
 # Parse settings
 KEYFILE, SOCKETFILE, PORT, ALLOWED_REMOTE_ADDRESSES, LS_VAR_NAME, \
-    SLACK_OPTIONS = parse_config(CONFIGFILE)
+    SLACK_OPTIONS, HOST = parse_config(CONFIGFILE)
 # Init the one time password objects
 OTPS, PASSWORD = parse_keyfile(KEYFILE)
 
@@ -205,6 +207,28 @@ def main():
         'bind': '%s:%s' % ('0.0.0.0', str(PORT)),
         'workers': 1,
     }
+    path_to_letsencrypt_dir = os.path.join(
+        os.sep,
+        'etc',
+        'letsencrypt',
+        'live',
+        HOST
+    )
+    https_keyfile = os.path.join(path_to_letsencrypt_dir, 'privkey.pem')
+    https_cert = os.path.join(path_to_letsencrypt_dir, 'cert.pem')
+    https_ca_cert = os.path.join(path_to_letsencrypt_dir, 'chain.pem')
+
+    if all([os.path.exists(path) for path in (https_keyfile, https_cert, https_ca_cert)]):
+        # Use HTTPS
+        options['keyfile'] = https_keyfile
+        options['certfile'] = https_cert
+        options['ca_certs'] = https_ca_cert
+    else:
+        # Use HTTP, issue warning
+        warnings.warn("Let's Encrypt not set up for this host (%s). HTTPS will "
+                      "be DISABLED. The Slackbot project expects this to use "
+                      "HTTPS, so the integration with Slack won't work." % HOST)
+
     StandaloneApplication(app, options).run()
 
 if __name__ == '__main__':

@@ -35,16 +35,12 @@ else:
           "which Slackbot resides.")
 
 # HOST
-if choice in ("both", "slackbot"):
-    print("Which host will the server run on?")
-    choices['host'] = input("> ")
+print("Which host will the server run on?")
+choices['host'] = input("> ")
 
 # PORT
-if choice == "both":
+if choice in ("both", "server"):
     print("At which port? [8000]")
-    choices['port'] = int(input("> ") or 8000)
-elif choice == "server":
-    print("Which port should the server run on? [8000]")
     choices['port'] = int(input("> ") or 8000)
 else:
     if os.path.isfile(server_configfile):
