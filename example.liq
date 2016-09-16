@@ -22,11 +22,11 @@ nightmusic_all_day = interactive.bool("variable_name", false)
 
 # As nightmusic, we'll play a high-pitched sine sound
 
-nightmusic = sine(amplitude=0.7, 880.)
+nightmusic = square(amplitude=0.7, 440.)
 nightmusic = mksafe(nightmusic)
 
 # As our default, we'll play a sine sound one octave lower
-default = sine(amplitude=0.7, 440.)
+default = square(amplitude=0.7, 220.)
 
 # Switch between the two streams based on the interactive bool
 # and the current time of day.
