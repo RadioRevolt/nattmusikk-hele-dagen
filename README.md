@@ -3,6 +3,11 @@ Aktiver og deaktiver nattmusikk-hele-døgnet fra Slack
 
 ## Bruk
 
+Du har to komponenter; den ene sitter på serveren der LiquidSoap er installert,
+og styrer den. Den andre sitter som en plugin i RadioRevolt/Slackbot, og
+interagerer med førstnevnte for å skru av og på nattmusikken på kommando fra
+brukerne i Slack.
+
 ### Oppsett
 
 Ops: ikke alle stegene her er implementert enda.
@@ -12,15 +17,16 @@ Ops: ikke alle stegene her er implementert enda.
 2. Sett opp så du bruker en interactive.bool-variabel som skal være logisk høy
    når nattmusikk-hele-døgnet er aktivert.
 3. Kjør `make setup`, og følg promptene.
-4. Kopier `keyfile_copy.txt`, `settings_slackbot.yaml` og `slack2request.py` over til
-   din SlackBot instans.
+4. Kopier `keyfile_copy.txt` og `settings_slackbot.yaml`over til din SlackBot
+    instans.
 5. Når du er på serveren med SlackBot-instansen:
-   * `mv keyfile{_copy,}.txt`
-   * `chmod 400 keyfile.txt`
-   * `sudo chown navn-på-slackbot-bruker:navn-på-slackbot-gruppe keyfile.txt`
+   * `mv keyfile{_copy,_nattmusikk}.txt`
+   * `chmod 400 keyfile_nattmusikk.txt`
+   * `sudo chown navn-på-slackbot-bruker:navn-på-slackbot-gruppe keyfile_nattmusikk.txt`
 5. Slett `keyfile_copy.txt` fra serveren med LiquidSoap.
 6. Kjør `sudo systemctl start nattmusikk-hele-dagen` (SystemD)
-7. Restart SlackBot
+7. Restart RadioRevolt/SlackBot
+
 
 Alternativt oppsett (ikke holdt oppdatert, vil fjernes en gang):
 
@@ -45,10 +51,9 @@ Alternativt oppsett (ikke holdt oppdatert, vil fjernes en gang):
 
 ### Slack-bruk
 
-Skriv `.nattmusikk` for hjelp.
-Bruk `.nattmusikk status` hvis du ønsker å vite nåværende status.
-
-Skriv `.nattmusikk på` for å slå på nattmusikk-hele-døgnet.
+Skriv `.nattmusikk` for hjelp.  
+Bruk `.nattmusikk status` hvis du ønsker å vite nåværende status.  
+Skriv `.nattmusikk på` for å slå på nattmusikk-hele-døgnet.  
 Skriv `.nattmusikk av` for å slå av nattmusikk-hele-døgnet.
 
 Merk at Anna må være oppe for at dette skal fungere.
