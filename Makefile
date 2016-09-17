@@ -3,6 +3,10 @@
 run: settings.yaml settings_slackbot.yaml .installed_requirements
 	venv/bin/python slackbot/rtmbot.py -c settings_slackbot.yaml
 
+.PHONY: warn-if-on
+warn-if-on: settings.yaml settings_slackbot.yaml .installed_requirements
+	venv/bin/python warn-if-on.py
+
 # Configuration files, can be generated through helpful user interface
 settings.yaml settings_slackbot.yaml: | .installed_requirements
 	venv/bin/python generate_settings_file.py "$@"
