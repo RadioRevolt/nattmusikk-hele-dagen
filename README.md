@@ -3,75 +3,28 @@ Aktiver og deaktiver nattmusikk-hele-døgnet fra Slack
 
 ## Bruk
 
-Du har to komponenter; den ene sitter på serveren der LiquidSoap er installert,
-og styrer den. Den andre sitter som en plugin i RadioRevolt/Slackbot, og
-interagerer med førstnevnte for å skru av og på nattmusikken på kommando fra
-brukerne i Slack.
-
 ### Oppsett
 
-Ops: ikke alle stegene her er implementert enda.
-
 1. Sett opp LiquidSoap-skriptet så du kan kommunisere med det via en socket-fil
-   (se example.liq).
-2. Sett opp så du bruker en interactive.bool-variabel som skal være logisk høy
+   (se `example.liq`).
+2. Sett opp så du bruker en `interactive.bool`-variabel som skal være logisk høy
    når nattmusikk-hele-døgnet er aktivert.
 3. Kjør `make setup`, og følg promptene.
-4. Installer [Let's Encrypt](https://letsencrypt.org/), eller rettere sagt
-    Certbot (finnes i pakkerepoet for nyere Linux-distribusjoner), og gå
-    gjennom prosessen med å få sertifikat for serveren din (bruk certonly
-    og manual). nattmusikk-hele-dagen vil se at Let's Encrypt har laget
-    sertifikater, og bruke dem automatisk (gitt at de ligger i
-    `/etc/letsencrypt/live/$host` der $host er hosten du oppga i steg 3).
-4. Kopier `keyfile_copy.txt` og `settings_slackbot.yaml`over til din SlackBot
-    instans.
-5. Når du er på serveren med SlackBot-instansen:
-   * `mv keyfile{_copy,_nattmusikk}.txt`
-   * `chmod 400 keyfile_nattmusikk.txt`
-   * `sudo chown navn-på-slackbot-bruker:navn-på-slackbot-gruppe keyfile_nattmusikk.txt`
-5. Slett `keyfile_copy.txt` fra serveren med LiquidSoap.
-6. Kjør `sudo systemctl start nattmusikk-hele-dagen` (SystemD)
-7. Restart RadioRevolt/SlackBot
-8. Legg til et par linjer i crontab:
-
-   `sudo -u nattmusikk-hele-dagen crontab -e`
-
-   Linjene:  
-   ```
-   0 9,17 * * * * /sti/til/nattmusikk-hele-dagen/venv/bin/python /sti/til/nattmusikk-hele-dagen/warn_if_on.py
-   ```
-
-   Og også for sudo:
+4. Kjør `sudo make deploy-upstart` eller `sudo make deploy-systemd`, avhengig
+   av hvilket system som kjører hos deg. Ubuntu 15.04 og senere kjører
+   SystemD, tidligere kjører Upstart. Kjører du det antikvariske SysV 
+   init-systemet, må du skrive en init-fil selv.
+5. Kjør `sudo start nattmusikk-hele-dagen` på Upstart eller `sudo systemctl 
+   start nattmusikk-hele-dagen` på SystemD for å starte programmet (det skal starte
+   automatisk ved oppstart).
+6. Legg til en linje i crontab ved å kjøre:
 
    `sudo crontab -e`
 
-   Med linjen:
+   Linjen:  
    ```
-   23 1 * * * * certbot renew -n
+   0 9,17 * * * * make -C /sti/til/nattmusikk-hele-dagen warn-if-on 2>&1 > /dev/null
    ```
-
-
-
-Alternativt oppsett (ikke holdt oppdatert, vil fjernes en gang):
-
-1. `virtualenv -p python3 venv`
-2. `. venv/bin/activate`
-3. `pip install -r requirements.txt`
-4. `sudo adduser --system --no-create-home --group --disabled-login nattmusikk-hele-dagen`
-5. ``
-6. Resten av stegene er ikke implementert enda (antar SystemD brukes):
-
-   `sudo cp nattmusikk-hele-dagen.service /etc/systemd/system/`
-7. Rediger `/etc/systemd/system/nattmusikk-hele-dagen.service` og fyll inn
-   manglende detaljer.
-8. `sudo systemctl enable nattmusikk-hele-dagen`
-9. Endre LiquidSoap-skriptet så det bruker en interactive bool med navnet du
-   brukte i steg 7. Du må også sette opp bruk av en socket-fil. Se
-   `liquidsoap_example.liq`
-9. `sudo systemctl start nattmusikk-hele-dagen`
-10. Kopier nøkkel-fila (du må være superbruker for å lese den) og putt den
-    samme fila på maskinen med SlackBot.
-11. Integrer `slack2request.py` med rammeverket ditt.
 
 ### Slack-bruk
 
@@ -79,8 +32,6 @@ Skriv `.nattmusikk` for hjelp.
 Bruk `.nattmusikk status` hvis du ønsker å vite nåværende status.  
 Skriv `.nattmusikk på` for å slå på nattmusikk-hele-døgnet.  
 Skriv `.nattmusikk av` for å slå av nattmusikk-hele-døgnet.
-
-Merk at Anna må være oppe for at dette skal fungere.
 
 Hvis du glemmer å slå av nattmusikk-hele-døgnet, skal det bli postet en
 påminnelse på Slack klokken 9 om morningen og 17 på kvelden.
@@ -129,40 +80,8 @@ endre verdi når som helst, og som kan endre hvilken stream som brukes også.
 Vi setter også opp slik at eksterne program kan kommunisere med
 LiquidSoap-serveren.
 
-Et Python-program vil lytte etter HTTP-requests, og autentisere disse.
-Avhengig av hva avsenderen ønsker, vil programmet kommunisere med
-LiquidSoap-serveren og endre verdien til den nevnte variabelen og hente dens
-nåværende verdi.
-
-På en annen maskin vil en annen Python-modul kommunisere med Python-programmet
-fra forrige avsnitt, og fungere som et lag mellom den og Slack.
-
-## Protokoll
-
-I utgangspunktet bør kryptert HTTP brukes (HTTPS), men det er ikke alltid like
-lett å få til. Et passord og et engangspassord brukes for å autentisere
-klienten, Dette betyr at de hemmelige nøklene er lagret både hos klient og
-server, og at begge må være synkronisert i tid.
-
-Hvis en angriper får tilgang til én av maskinene, vil han eller hun kunne skru
-nattmusikk-hele-døgnet av eller på. Derfor er programvaren laget slik at det
-postes på Slack hver gang nattmusikk-hele-døgnet skrus av eller på. Dette gjøres
-på server-sida, for å sikre at ikke en angriper på egen maskin kan gå forbi
-rapporteringen.
-
-For å endre og hente status på nattmusikk-hele-døgnet, sender du en
-POST-request til root der request2liquidsoap.py kjører. Den skal inneholde tre
-POST-felter:
-
-* **`password`**: Passordet, som er lagret i keyfile.txt.
-* **`onetime_password`**: Éngangspassordet, generert med nøkkelen i keyfile.txt.
-* **`action`**: Én av status, on eller off, avhengig av hva du ønsker å gjøre.
-
-Uansett hvilken `action` du velger, så vil responsen være JSON med følgende
-felter:
-* **`onetime_password`**: Et éngangspassord, generert med den andre nøkkelen
-    i keyfile.txt. Brukes for å forsikre seg om at serveren godkjente
-    innloggingen.
-* **`status`**: `true` hvis nattmusikk-hele-døgnet er aktivert, `false` hvis
-    ikke.
+Et Python-program kobler seg til Slack og lytter på meldingene som postes på
+relevante kanaler. Hvis noen poster en melding som starter på
+`.nattmusikk`, trigges programmet og kan som et resultat gjøre spørringer mot
+LiquidSoap for å hente status og endre den interaktive boolske variablen.
 
