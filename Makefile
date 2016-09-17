@@ -10,6 +10,8 @@ run: settings.yaml settings_slackbot.yaml .installed_requirements
 warn-if-on: settings.yaml settings_slackbot.yaml .installed_requirements
 	venv/bin/python warn-if-on.py
 
+# Variations for running as the dedicated user (preferable, so you can
+# reduce potential damage caused by security breaches).
 .PHONY: user-run
 user-run: user
 	sudo -u "$(USER)" venv/bin/python slackbot/rtmbot.py -c settings_slackbot.yaml
@@ -32,14 +34,16 @@ $(SYSTEMD_UNITFILE) : templates/$(SYSTEMD_UNITFILE) | .installed_requirements
 	venv/bin/python generate_unit_file.py systemd "$@"
 
 # Deploying unit/job files, must be run as sudo
+# The upstart job file
 /etc/init/$(UPSTART_JOBFILE): $(UPSTART_JOBFILE)
-	cp "$<" "$@"
-
-/etc/systemd/system/$(SYSTEMD_UNITFILE): $(SYSTEMD_UNITFILE)
 	cp "$<" "$@"
 
 .PHONY: deploy-upstart
 deploy-upstart: /etc/init/$(UPSTART_JOBFILE)
+
+# The SystemD unit file
+/etc/systemd/system/$(SYSTEMD_UNITFILE): $(SYSTEMD_UNITFILE)
+	cp "$<" "$@"
 
 .PHONY: deploy-systemd
 deploy-systemd: /etc/systemd/system/$(SYSTEMD_UNITFILE)
@@ -69,6 +73,6 @@ setup: .installed_requirements settings.yaml settings_slackbot.yaml user
 # Remove any local user-files from the folder
 .PHONY: wipe
 wipe:
-	rm -rf venv settings.yaml settings_slackbot.yaml
+	rm -rf venv settings.yaml settings_slackbot.yaml .installed_requirements nattmusikk-hele-dagen.conf nattmusikk-hele-dagen.service
 
 
