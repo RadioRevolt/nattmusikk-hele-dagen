@@ -20,13 +20,16 @@ set("server.socket.path", "/tmp/testing_socket")
 
 nightmusic_all_day = interactive.bool("variable_name", false)
 
-# As nightmusic, we'll play a high-pitched sine sound
+# As nightmusic, we'll play a square wave (similar to what 
+# 8-bit consoles used)
 
-nightmusic = square(amplitude=0.7, 440.)
-nightmusic = mksafe(nightmusic)
+# Define volume for square waves
+square_amplitude = 0.2
+
+nightmusic = square(amplitude=square_amplitude, 440.)
 
 # As our default, we'll play a sine sound one octave lower
-default = square(amplitude=0.7, 220.)
+default = square(amplitude=square_amplitude, 220.)
 
 # Switch between the two streams based on the interactive bool
 # and the current time of day.
@@ -38,5 +41,5 @@ output_stream = switch(track_sensitive=false, [
 ])
 output_stream = mksafe(output_stream)
 
-
+# Output this to the speakers
 out(output_stream)
