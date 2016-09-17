@@ -20,10 +20,11 @@ outputs = []
 
 def process_message(data):
     global outputs
+    to_output = []
     if data['text'].startswith('.nattmusikk'):
         if data['text'].strip() in ('.nattmusikk', '.nattmusikk hjelp',
                                     '.nattmusikk help'):
-            outputs.extend([
+            to_output.append("\n".join([
                 "`.nattmusikk [hjelp|status|på|av]`",
                 ".nattmusikk kan brukes for å slå av eller på nattmusikk-hele-"
                 "døgnet. Når påslått, vil stille-på-lufta ignoreres, og "
@@ -33,28 +34,28 @@ def process_message(data):
                 "er aktivert eller ikke.",
                 "Bruk `.nattmusikk på` for å skru på nattmusikk-hele-døgnet.",
                 "Bruk `.nattmusikk av` for å skru av nattmusikk-hele-døgnet.",
-            ])
+            ]))
         else:
             command = data['text'].strip().split(' ')[1]
             with interactive_bool:
                 if command in ('på', 'on', 'true'):
                     interactive_bool.value = True
-                    outputs.append("Nattmusikk-hele-døgnet er skrudd *PÅ*. \nDere vil *_ikke_*"
+                    to_output.append("Nattmusikk-hele-døgnet er skrudd *PÅ*. \nDere vil *_ikke_*"
                               " lenger få advarsel når det er stille på lufta "
                               "(annet enn når nattmusikken er stille).\n"
                               "Skriv `.nattmusikk av` når det er vanlig drift igjen.")
                 elif command in ('av', 'off', 'false'):
                     interactive_bool.value = False
-                    outputs.append("Nattmusikk-hele-døgnet er skrudd *AV*.\n"
+                    to_output.append("Nattmusikk-hele-døgnet er skrudd *AV*.\n"
                               "Normal drift gjenopptatt.")
                 elif command in ('status', 'verdi'):
                     interactive_bool.force_update()
                     if interactive_bool.value:
-                        outputs.append("Nattmusikk-hele-døgnet er *PÅSLÅTT*.\nDere "
+                        to_output.append("Nattmusikk-hele-døgnet er *PÅSLÅTT*.\nDere "
                                        "vil *IKKE* få beskjed hvis det blir stille på lufta.")
                     else:
-                        outputs.append("Nattmusikk-hele-døgnet er slått *av*.")
+                        to_output.append("Nattmusikk-hele-døgnet er slått *av*.")
                 else:
-                    outputs.append("Kjente ikke igjen '%s', skriv `.nattmusikk "
+                    to_output.append("Kjente ikke igjen '%s', skriv `.nattmusikk "
                                    "hjelp` for bruksanvisning." % command)
-    outputs = [(data['channel'], line) for line in outputs]
+    outputs = [(data['channel'], line) for line in to_output]
