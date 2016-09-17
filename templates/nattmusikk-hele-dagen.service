@@ -1,5 +1,7 @@
 [Unit]
 Description=Slackbot for enabling or disabling nightmusic-all-day
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
