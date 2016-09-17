@@ -7,12 +7,28 @@ run: settings.yaml settings_slackbot.yaml .installed_requirements
 settings.yaml settings_slackbot.yaml: | .installed_requirements
 	venv/bin/python generate_settings_file.py "$@"
 
-# Unit files
-nattmusikk-hele-dagen.conf: templates/nattmusikk-hele-dagen.conf | .installed_requirements
+# Unit files, used for defining services that start automatically
+UPSTART_JOBFILE = nattmusikk-hele-dagen.conf
+$(UPSTART_JOBFILE) : templates/$(UPSTART_JOBFILE) | .installed_requirements
 	venv/bin/python generate_unit_file.py upstart "$@"
 
-nattmusikk-hele-dagen.service: templates/nattmusikk-hele-dagen.service | .installed_requirements
+SYSTEMD_UNITFILE = nattmusikk-hele-dagen.service
+$(SYSTEMD_UNITFILE) : templates/$(SYSTEMD_UNITFILE) | .installed_requirements
 	venv/bin/python generate_unit_file.py systemd "$@"
+
+# Deploying unit/job files, must be run as sudo
+/etc/init/$(UPSTART_JOBFILE): $(UPSTART_JOBFILE)
+	cp "$<" "$@"
+
+/etc/systemd/system/$(SYSTEMD_UNITFILE): $(SYSTEMD_UNITFILE)
+	cp "$<" "$@"
+
+.PHONY: deploy-upstart
+deploy-upstart: /etc/init/$(UPSTART_JOBFILE)
+
+.PHONY: deploy-systemd
+deploy-systemd: /etc/systemd/system/$(SYSTEMD_UNITFILE)
+	systemctl enable $(SYSTEMD_UNITFILE)
 
 # Virtual environment
 venv:
