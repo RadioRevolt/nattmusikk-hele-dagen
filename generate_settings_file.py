@@ -32,6 +32,10 @@ if choice == "settings.yaml":
     print("Name of the interactive.bool variable in LiquidSoap:")
     choices['liquidsoap_var_name'] = input("> ")
 
+    # SLACK_CHANNEL
+    print("On which channel in Slack should messages be posted?")
+    choices['slack_channel'] = input("> ")
+
 else:
     # SLACK
     print("Slack API Token?")

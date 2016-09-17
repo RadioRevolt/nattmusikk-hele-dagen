@@ -1,17 +1,39 @@
 import yaml
+import requests
 from liquidsoap_boolean import LiquidSoapBoolean
 
 
-def parse_config(configfile):
+def parse_config(configfile, slackbotfile):
     with open(configfile) as f:
         doc = yaml.load(f)
     socketfile = doc["socketfile"]
     ls_var_name = doc["liquidsoap_var_name"]
+    channel = doc["slack_channel"]
 
-    return socketfile, ls_var_name
+    with open(slackbotfile) as f:
+        doc2 = yaml.load(f)
+    token = doc2["SLACK_TOKEN"]
+
+    return socketfile, ls_var_name, channel, token
 
 
-SOCKETFILE, LS_VAR_NAME = parse_config("settings.yaml")
+def send_to_slack(message):
+    options = SLACK_OPTIONS
+    options['text'] = message
+    r = requests.get("https://slack.com/api/chat.postMessage", params=options,
+                     timeout=10.0)
+    r.raise_for_status()
+    r.close()
+
+
+SOCKETFILE, LS_VAR_NAME, CHANNEL, TOKEN = parse_config("settings.yaml",
+                                                       "settings_slackbot.yaml")
+
+SLACK_OPTIONS = {
+    "as_user": True,
+    "channel": CHANNEL,
+    "token": TOKEN,
+}
 
 interactive_bool = LiquidSoapBoolean(SOCKETFILE, LS_VAR_NAME)
 
@@ -58,4 +80,5 @@ def process_message(data):
                 else:
                     to_output.append("Kjente ikke igjen '%s', skriv `.nattmusikk "
                                    "hjelp` for bruksanvisning." % command)
-    outputs = [(data['channel'], line) for line in to_output]
+    for text in to_output:
+        send_to_slack(text)

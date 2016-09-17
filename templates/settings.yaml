@@ -8,4 +8,7 @@ socketfile: "{{ socketfile }}"
 # to change.
 liquidsoap_var_name: "{{ liquidsoap_var_name }}"
 
+# Name of the Slack channel to restrain nattmusikk requests to
+slack_channel: "{{ slack_channel }}"
+
 {% block more_settings %}{% endblock %}
