@@ -11,6 +11,7 @@ set("log.file", false)
 # Create a socket file which the external script can connect to
 set("server.socket", true)
 set("server.socket.path", "/tmp/testing_socket")
+set("server.socket.permissions", 0o660)
 
 # Create the interactive bool which we'll change from the
 # request2liquidsoap.py script.

@@ -6,7 +6,8 @@ Aktiver og deaktiver nattmusikk-hele-døgnet fra Slack
 ### Oppsett
 
 1. Sett opp LiquidSoap-skriptet så du kan kommunisere med det via en socket-fil
-   (se `example.liq`).
+   (se `example.liq`). Du bør sørge for at man kan bruke socket-fila bare man
+   er i `liquidsoap`-gruppa (igjen, se `example.liq`).
 2. Sett opp så du bruker en `interactive.bool`-variabel som skal være logisk høy
    når nattmusikk-hele-døgnet er aktivert.
 3. Kjør `make setup`, og følg promptene.
@@ -23,7 +24,7 @@ Aktiver og deaktiver nattmusikk-hele-døgnet fra Slack
 
    Linjen:  
    ```
-   0 9,17 * * * * make -C /sti/til/nattmusikk-hele-dagen warn-if-on 2>&1 > /dev/null
+   0 9,17 * * * * make -C /sti/til/nattmusikk-hele-dagen user-warn-if-on 2>&1 > /dev/null
    ```
 
 ### Slack-bruk
@@ -35,6 +36,28 @@ Skriv `.nattmusikk av` for å slå av nattmusikk-hele-døgnet.
 
 Hvis du glemmer å slå av nattmusikk-hele-døgnet, skal det bli postet en
 påminnelse på Slack klokken 9 om morningen og 17 på kvelden.
+
+### Make
+
+Les manualen for GNU Make hvis du tenker å se på `Makefile` og du ikke er kjent med
+`make` allerede; `make` er et fantastisk verktøy og manualen er bra laga!
+
+Dette er de "offentlige" målene (targets) som `Makefile` støtter:
+
+* (ingenting) eller run: Kjør nattmusikk-hele-dagen.
+* warn-if-on: Legg ut påminnelse på Slack hvis nattmusikk-hele-døgnet er aktivert.
+* user-run: Kjør nattmusikk-hele-dagen, men som den dedikerte nattmusikk-hele-dagen-brukeren.
+  Må kjøres med sudo. Foretrekk denne foran `run`.
+* user-warn-if-on: Kjør `make warn-if-on` som nattmusikk-hele-dagen-brukeren. Må kjøres
+  med sudo. Foretrekk denne foran `warn-if-on`.
+* setup: Sett opp alt som må til før nattmusikk-hele-dagen kan kjøres. Interaktivt.
+* deploy-upstart og deploy-systemd: Sørg for at nattmusikk-hele-dagen starter
+  automatisk ved oppstart av maskinen. De to variantene er for de to forskjellige
+  init-systemene Upstart og SystemD. Må kjøres som med superbruker-rettigheter.
+* user: Lag en bruker med navn nattmusikk-hele-dagen og legg den til i liquidsoap-gruppa,
+  gitt at brukeren ikke eksisterer ennå.
+
+Det finnes også mange andre, ta en titt på `Makefile` for detaljer.
 
 ## Bakgrunn
 

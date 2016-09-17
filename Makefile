@@ -1,3 +1,6 @@
+# User to create for running this application
+USER = "nattmusikk-hele-dagen"
+
 # Run/deploy nattmusikk-hele-dagen
 .PHONY: run
 run: settings.yaml settings_slackbot.yaml .installed_requirements
@@ -6,6 +9,14 @@ run: settings.yaml settings_slackbot.yaml .installed_requirements
 .PHONY: warn-if-on
 warn-if-on: settings.yaml settings_slackbot.yaml .installed_requirements
 	venv/bin/python warn-if-on.py
+
+.PHONY: user-run
+user-run: user
+	sudo -u "$(USER)" venv/bin/python slackbot/rtmbot.py -c settings_slackbot.yaml
+
+.PHONY: user-warn-if-on
+user-warn-if-on: settings.yaml settings_slackbot.yaml .installed_requirements
+	sudo -u "$(USER)" venv/bin/python warn-if-on.py
 
 # Configuration files, can be generated through helpful user interface
 settings.yaml settings_slackbot.yaml: | .installed_requirements
@@ -45,14 +56,11 @@ venv:
 	. venv/bin/activate && pip install -r requirements.txt
 	touch .installed_requirements
 
-# User to create for running this application
-USER = "nattmusikk-hele-dagen"
-
 # Create USER if it doesn't exist yet
 .PHONY: user
 user:
 	@echo "sudo is potentially needed to create a new user on this system."
-	id -u $(USER) > /dev/null 2>&1 || sudo adduser --system --no-create-home --group --disabled-login $(USER)
+	id -u $(USER) > /dev/null 2>&1 || (sudo adduser --system --no-create-home --group --disabled-login $(USER) && sudo usermod -a -G liquidsoap $(USER))
 
 # Make the application ready for deployment
 .PHONY: setup
