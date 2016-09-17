@@ -1,5 +1,2 @@
-pyotp
-flask
-gunicorn
-PyYAML
-requests
+-r slackbot/requirements.txt
+jinja2

@@ -1,15 +1,13 @@
-{% extends "settings_base.yaml" %}
-{% block explanation -%}
-# Settings for nightmusic-all-day, used on the host which provides the layer
-# between Slack and the host running LiquidSoap.
-{% endblock %}
+# Configuration file for the SlackBot framework
 
-{% block more_settings %}
-# The port on which nightmusic-all-day on the host running LS is listening.
-port: {{ port }}
+# Turn debugging on or off
+DEBUG: false
 
-# Whether the server running LS is using HTTPS or not. Set to false only when
-# developing!
-https: true
+# Slack API Token
+SLACK_TOKEN: "{{ slack_token }}"
 
-{% endblock %}
+# Set to true to run as daemon
+DAEMON: false
+
+# Path to the logfile
+LOGFILE: "{{ logfile }}"

@@ -1,0 +1,11 @@
+# Configuration for nattmusikk-hele-dagen
+
+# Path to the socket file opened by LiquidSoap. Used to communicate with the
+# LiquidSoap server.
+socketfile: "{{ socketfile }}"
+
+# The name of the interactive.bool in LiquidSoap that this program is supposed
+# to change.
+liquidsoap_var_name: "{{ liquidsoap_var_name }}"
+
+{% block more_settings %}{% endblock %}
