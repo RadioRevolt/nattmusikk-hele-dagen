@@ -1,4 +1,3 @@
-import pyotp
 import yaml
 from liquidsoap_boolean import LiquidSoapBoolean
 
@@ -12,13 +11,6 @@ def parse_config(configfile):
     return socketfile, ls_var_name
 
 
-def parse_keyfile(keyfile):
-    with open(keyfile, "r") as f:
-        lines = f.readlines()
-    keys = [line.strip() for line in lines if line.strip()]
-    return [pyotp.TOTP(key) for key in keys[:3]], keys[3]
-
-
 SOCKETFILE, LS_VAR_NAME = parse_config("settings.yaml")
 
 interactive_bool = LiquidSoapBoolean(SOCKETFILE, LS_VAR_NAME)
@@ -27,6 +19,7 @@ outputs = []
 
 
 def process_message(data):
+    global outputs
     if data['text'].startswith('.nattmusikk'):
         if data['text'].strip() in ('.nattmusikk', '.nattmusikk hjelp',
                                     '.nattmusikk help'):
@@ -64,3 +57,4 @@ def process_message(data):
                 else:
                     outputs.append("Kjente ikke igjen '%s', skriv `.nattmusikk "
                                    "hjelp` for bruksanvisning." % command)
+    outputs = [(data['channel'], line) for line in outputs]
