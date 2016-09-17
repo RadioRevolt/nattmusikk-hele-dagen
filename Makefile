@@ -5,7 +5,14 @@ run: settings.yaml settings_slackbot.yaml .installed_requirements
 
 # Configuration files, can be generated through helpful user interface
 settings.yaml settings_slackbot.yaml: | .installed_requirements
-	venv/bin/python generate_settings_file.py $@
+	venv/bin/python generate_settings_file.py "$@"
+
+# Unit files
+nattmusikk-hele-dagen.conf: templates/nattmusikk-hele-dagen.conf | .installed_requirements
+	venv/bin/python generate_unit_file.py upstart "$@"
+
+nattmusikk-hele-dagen.service: templates/nattmusikk-hele-dagen.service | .installed_requirements
+	venv/bin/python generate_unit_file.py systemd "$@"
 
 # Virtual environment
 venv:

@@ -98,3 +98,5 @@ ENV/
 /settings.yaml
 /settings_slackbot.yaml
 .installed_requirements
+/nattmusikk-hele-dagen.conf
+/nattmusikk-hele-dagen.service

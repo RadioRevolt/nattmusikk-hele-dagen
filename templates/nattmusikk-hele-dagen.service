@@ -1,0 +1,11 @@
+[Unit]
+Description=Slackbot for enabling or disabling nightmusic-all-day
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/make -C "{{ path }}"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
