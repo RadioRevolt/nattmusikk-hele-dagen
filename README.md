@@ -24,7 +24,7 @@ Aktiver og deaktiver nattmusikk-hele-døgnet fra Slack
 
    Linjen:  
    ```
-   0 9,17 * * * * make -C /sti/til/nattmusikk-hele-dagen user-warn-if-on 2>&1 > /dev/null
+   0 9,17 * * * make -C /sti/til/nattmusikk-hele-dagen user-warn-if-on 2>&1 > /dev/null
    ```
 
 ### Slack-bruk
@@ -108,3 +108,7 @@ relevante kanaler. Hvis noen poster en melding som starter på
 `.nattmusikk`, trigges programmet og kan som et resultat gjøre spørringer mot
 LiquidSoap for å hente status og endre den interaktive boolske variablen.
 
+Dette er implementert ved å bruke RadioRevolt/SlackBot, fjerne alle
+eksisterende plugins og legge inn en ny plugin som kommuniserer med LiquidSoap.
+Ved deployment har vi brukt samme token som for RadioRevolt/SlackBot, så det
+ser ut som at det tilhører samme bot.
